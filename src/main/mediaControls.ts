@@ -4,6 +4,7 @@ import { app } from 'electron';
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
 import path from 'path';
+import { release as getOsRelease } from 'node:os';
 import { isAbortError } from '../shared/abortError';
 import log from './logger';
 import { registerNativeLogHandler } from './native/logging';
@@ -181,8 +182,23 @@ async function resolveCoverImage(url: string, signal?: AbortSignal): Promise<Buf
   return promise;
 }
 
+/** Windows 7 (NT 6.1) lacks the WinRT SMTC APIs used by this addon. */
+function isWindows7OrEarlier(): boolean {
+  if (process.platform !== 'win32') return false;
+  const [major, minor] = getOsRelease().split('.').map(Number);
+  return major === 6 && Number.isFinite(minor) && minor <= 1;
+}
+
 /** 初始化原生媒体控制服务 */
 export function initMediaControls(getMainWindow: () => BrowserWindow | null): void {
+  // SMTC is a Windows 10+ API. On Windows 7, keep the player usable and
+  // register the no-op IPC handlers instead of loading a WinRT-only addon.
+  if (isWindows7OrEarlier()) {
+    log.warn('[MediaControls] Windows 7 detected; system media controls are disabled on this OS');
+    registerFallbackIpc();
+    return;
+  }
+
   nativeModule = loadNativeModule();
 
   if (!nativeModule) {
