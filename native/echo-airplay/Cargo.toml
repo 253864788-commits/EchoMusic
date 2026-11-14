@@ -9,7 +9,7 @@ description = "EchoMusic AirPlay sender. ALAC 44100 Hz 16-bit from post-DSP i16 
 crate-type = ["cdylib"]
 
 [dependencies]
-napi = { version = "3", features = ["napi9", "tokio_rt"] }
+napi = { version = "3", features = ["napi8", "tokio_rt"] }
 napi-derive = "3"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "time", "macros"] }
 tokio-stream = "0.1"
