@@ -40,14 +40,33 @@ jobs:
             'echo-airplay',
             'echo-platform-adaptor'
           )
+          $target = 'x86_64-win7-windows-msvc'
+          $outputDir = Join-Path $env:GITHUB_WORKSPACE 'win7-native'
+          New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
           foreach ($crate in $crates) {
-            Write-Host "Checking $crate"
+            Write-Host "Checking and building $crate for $target"
             Push-Location "native/$crate"
             try {
-              cargo +nightly check -Z build-std=std,panic_unwind --locked --target x86_64-win7-windows-msvc
+              cargo +nightly check -Z build-std=std,panic_unwind --locked --target $target
               if ($LASTEXITCODE -ne 0) { throw "cargo check failed: $crate" }
+
+              cargo +nightly build -Z build-std=std,panic_unwind --locked --release --target $target
+              if ($LASTEXITCODE -ne 0) { throw "cargo build failed: $crate" }
+
+              $dllName = $crate.Replace('-', '_') + '.dll'
+              $dllPath = Join-Path (Join-Path (Join-Path 'target' $target) 'release') $dllName
+              if (!(Test-Path $dllPath)) { throw "Expected native library not found: $dllPath" }
+              Copy-Item $dllPath (Join-Path $outputDir ($crate + '.node')) -Force
             }
             finally {
               Pop-Location
             }
           }
+
+      - name: Upload Win7 x64 native addons
+        uses: actions/upload-artifact@v4
+        with:
+          name: echomusic-win7-native-addons
+          path: win7-native/*.node
+          if-no-files-found: error
+          retention-days: 7
