@@ -1,0 +1,52 @@
+name: Win7 compatibility native check
+
+on:
+  push:
+    branches:
+      - win7-compat
+    paths:
+      - 'native/**'
+      - '.github/workflows/win7-native-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64-native-check:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+          # Windows MSVC target is supplied by the runner's Visual Studio toolchain.
+      - name: Cargo check native addons with Node-API 8
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $crates = @(
+            'echo-audio-player',
+            'echo-audio-capture',
+            'echo-media-controls',
+            'echo-sqlite-store',
+            'echo-opencc',
+            'echo-upnp',
+            'echo-airplay',
+            'echo-platform-adaptor'
+          )
+          foreach ($crate in $crates) {
+            Write-Host "Checking $crate"
+            Push-Location "native/$crate"
+            try {
+              cargo check --locked --target x86_64-pc-windows-msvc
+              if ($LASTEXITCODE -ne 0) { throw "cargo check failed: $crate" }
+            }
+            finally {
+              Pop-Location
+            }
+          }
