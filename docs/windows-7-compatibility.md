@@ -11,7 +11,7 @@ This branch is an experimental compatibility track. It does not yet produce a ve
 
 1. The current application pins Electron 43.7.6. Windows 7 requires the legacy Electron 22 line (Chromium 108 / Node.js 16). Electron 22 is end-of-life and should be treated as a legacy/offline-risk runtime.
 2. The current CSS uses Tailwind CSS 4.3. Tailwind 4 targets newer browser engines than Chromium 108. The CSS pipeline must be migrated to Tailwind 3.4 or otherwise made Chromium-108 compatible; setting a JavaScript build target does not solve this.
-3. The Rust N-API addons currently enable N-API 9. Electron 22's Node.js 16 runtime supports N-API 8. Each addon must be audited for N-API 9-only APIs, changed to an N-API 8-compatible surface, rebuilt for Windows x64, and loaded in Electron 22.
+3. The Rust addon manifests have now been lowered from N-API 9 to N-API 8 across the eight native crates. This removes the known Node-API level mismatch for Electron 22's Node.js 16 runtime, but the code still needs to compile against N-API 8, every addon must be rebuilt for Windows x64, and each binary must be loaded in Electron 22. N-API 8 is only the ABI floor; it does not prove that the rest of the Rust or OS dependencies support Windows 7.
 4. Windows native integrations need OS gating or legacy alternatives. SMTC is now skipped on Windows 7. Taskbar/DWM integrations, audio capture, and other WinRT/Windows 10+ calls still require audit and runtime testing.
 5. The current lockfile and dependency tree must be checked for packages requiring Node.js 18/20/22 or newer browser APIs. Downgrading Electron alone is not sufficient.
 
