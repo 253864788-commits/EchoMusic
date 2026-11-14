@@ -40,11 +40,6 @@ jobs:
       - name: Install dependencies and regenerate lockfile
         run: pnpm install --no-frozen-lockfile
 
-      - name: Commit regenerated lockfile
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore(win7): regenerate pnpm lockfile for legacy build'
-          file_pattern: pnpm-lock.yaml
 
       - name: Type check
         run: pnpm exec vue-tsc --noEmit
