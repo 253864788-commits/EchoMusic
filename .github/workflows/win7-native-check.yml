@@ -26,14 +26,17 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
-      - name: Cargo check native addons with Node-API 8
+
+      - name: Cargo check Win7-compatible native addons with Node-API 8
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          # echo-media-controls uses Windows Runtime SystemMediaTransportControls,
+          # which is unavailable on Windows 7. It is intentionally excluded from
+          # the Win7 build; the app must skip loading this addon on Win7.
           $crates = @(
             'echo-audio-player',
             'echo-audio-capture',
-            'echo-media-controls',
             'echo-sqlite-store',
             'echo-opencc',
             'echo-upnp',
