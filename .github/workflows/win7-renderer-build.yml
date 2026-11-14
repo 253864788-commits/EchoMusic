@@ -1,0 +1,64 @@
+name: Win7 compatibility renderer build
+
+on:
+  push:
+    branches:
+      - win7-compat
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'vite.config.mts'
+      - 'src/renderer/**'
+      - 'tailwind.config.cjs'
+      - 'postcss.config.cjs'
+      - '.github/workflows/win7-renderer-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  renderer-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies and regenerate lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Commit regenerated lockfile
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore(win7): regenerate pnpm lockfile for legacy build'
+          file_pattern: pnpm-lock.yaml
+
+      - name: Type check
+        run: pnpm exec vue-tsc --noEmit
+
+      - name: Build for Chromium 108 / Node 16
+        run: pnpm exec vite build
+        env:
+          ECHOMUSIC_WIN7: '1'
+
+      - name: Upload renderer and Electron bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: echomusic-win7-compat-bundles
+          path: |
+            dist/
+            dist-electron/
+          if-no-files-found: error
+          retention-days: 7
