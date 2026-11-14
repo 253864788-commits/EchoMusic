@@ -7,6 +7,8 @@ import { resolve } from 'path';
 import { mkdirSync, writeFileSync } from 'fs';
 
 const analyzeBundle = process.env.ANALYZE_BUNDLE === '1';
+// Electron 22 ships Chromium 108 and Node.js 16; opt-in target keeps modern builds unchanged.
+const win7Compat = process.env.ECHOMUSIC_WIN7 === '1';
 const bundleAnalysisPlugin = () => ({
   name: 'echo-bundle-analysis',
   generateBundle(
@@ -39,6 +41,7 @@ const bundleAnalysisPlugin = () => ({
 
 export default defineConfig({
   build: {
+    ...(win7Compat ? { target: 'chrome108' } : {}),
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -60,6 +63,7 @@ export default defineConfig({
         },
         vite: {
           build: {
+            ...(win7Compat ? { target: 'node16' } : {}),
             outDir: 'dist-electron/main',
             emptyOutDir: true,
             rollupOptions: {
@@ -92,6 +96,7 @@ export default defineConfig({
         },
         vite: {
           build: {
+            ...(win7Compat ? { target: 'node16' } : {}),
             outDir: 'dist-electron/preload', // 明确预加载脚本输出目录
             emptyOutDir: true,
           },
