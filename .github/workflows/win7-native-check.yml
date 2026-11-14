@@ -22,9 +22,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-          # Windows MSVC target is supplied by the runner's Visual Studio toolchain.
+      - name: Install Rust nightly with Win7 target build support
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
       - name: Cargo check native addons with Node-API 8
         shell: pwsh
         run: |
@@ -43,7 +44,7 @@ jobs:
             Write-Host "Checking $crate"
             Push-Location "native/$crate"
             try {
-              cargo check --locked --target x86_64-pc-windows-msvc
+              cargo +nightly check -Z build-std=std,panic_unwind --locked --target x86_64-win7-windows-msvc
               if ($LASTEXITCODE -ne 0) { throw "cargo check failed: $crate" }
             }
             finally {
