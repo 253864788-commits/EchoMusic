@@ -31,17 +31,15 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          # echo-media-controls uses Windows Runtime SystemMediaTransportControls,
-          # which is unavailable on Windows 7. It is intentionally excluded from
-          # the Win7 build; the app must skip loading this addon on Win7.
+          # Optional Windows integrations are excluded from the first Win7 core player build:
+          # media-controls depends on Windows 10 SMTC; AirPlay/UPnP need extra Windows
+          # networking libraries; audio-capture is only used by recognition; the
+          # platform adaptor provides optional shell integrations.
+          # Keep the first installer focused on local audio playback and persistence.
           $crates = @(
             'echo-audio-player',
-            'echo-audio-capture',
             'echo-sqlite-store',
-            'echo-opencc',
-            'echo-upnp',
-            'echo-airplay',
-            'echo-platform-adaptor'
+            'echo-opencc'
           )
           $target = 'x86_64-win7-windows-msvc'
           $outputDir = Join-Path $env:GITHUB_WORKSPACE 'win7-native'
